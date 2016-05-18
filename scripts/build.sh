@@ -6,7 +6,7 @@ CF_ORG_NAME="Szymon.Brandys@pl.ibm.com"
 CF_SPACE_NAME="dev"
 
 UPT_TYPE=jenkins
-UPT_NAME=jenkins_node_cache
+UPT_NAME=jenkins_sample_app
 
 whoami
 rm -rf *
