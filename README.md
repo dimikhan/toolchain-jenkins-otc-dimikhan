@@ -1,10 +1,10 @@
-#Simple toolchain for Docker Container
+#Toolchain for setting up Jenkins in Docker container
 
-This example uses Docker with Node.js and includes a DevOps toolchain that is preconfigured for continuous delivery using Jenkins, source control, issue tracking, and online editing, deploying IBM Bluemix Containers Service.
+This projects sets up DevOps toolchain that is preconfigured to deploy Jenkins as Docker container.
 
 To get started, click **Deploy to Bluemix**.
 
-[![Deploy To Bluemix](https://bluemix.net/deploy/button.png)](https://new-console.ng.bluemix.net/devops/setup/deploy/?repository=https%3A//github.com/szbra/toolchain-jenkins)
+[![Deploy To Bluemix](https://bluemix.net/deploy/button.png)](https://new-console.ng.bluemix.net/devops/setup/deploy/?repository=https%3A//github.com/szbra/toolchain-jenkins-installer)
 
 Note: This template reuses a prior example: https://github.com/Puquios/hello-containers
 
