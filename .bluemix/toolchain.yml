@@ -11,10 +11,10 @@ required:
 hello-world-repo:
   service_id: githubpublic
   parameters:
-    repo_name: "hello-containers-{{name}}"
-    repo_url: https://github.com/Puquios/hello-containers
+    repo_name: "jenkins-installer-{{name}}"
+    repo_url: https://github.com/szbra/toolchain-jenkins-installer.git
     type: clone
-    has_issues: true
+    has_issues: false
 
 # Pipelines
 hello-world-build:
