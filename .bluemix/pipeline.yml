@@ -92,7 +92,7 @@ stages:
       region_id: ${PROD_REGION_ID}
       organization: ${PROD_ORG_NAME}
       space: ${PROD_SPACE_NAME}
-    PORT: '8080, 50000'
+    PORT: '8080,50000'
     CONTAINER_NAME: ${CF_APP_NAME}
     DEPLOY_TYPE: red_black
     COMMAND: |
