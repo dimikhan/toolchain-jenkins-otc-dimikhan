@@ -1,6 +1,6 @@
 ---
 name: "Jenkins for OTC Toolchain"
-description: "This example create a DevOps toolchain that is configured Jenkins for OTC. \n\nTo get started, click **Create**."
+description: "This example create a DevOps toolchain that is configured to set up Jenkins for OTC. \n\nTo get started, click **Create**."
 version: 0.1
 
 required: 

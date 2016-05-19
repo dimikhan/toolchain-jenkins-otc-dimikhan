@@ -1,6 +1,6 @@
 #Toolchain for setting up Jenkins for OTC in Docker container
 
-This example create a DevOps toolchain that is configured Jenkins for OTC.
+This example create a DevOps toolchain that is configured to set up Jenkins for OTC.
 
 To get started, click **Deploy to Bluemix**.
 
