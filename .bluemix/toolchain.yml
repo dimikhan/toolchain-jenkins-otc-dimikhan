@@ -1,6 +1,6 @@
 ---
-name: "Simple Container Toolchain"
-description: "This example uses Docker with Node.js and includes a DevOps toolchain that is preconfigured for continuous delivery using Jenkins, source control, issue tracking, and online editing. \n\nTo get started, click **Create**."
+name: "Jenkins for OTC Toolchain"
+description: "This example create a DevOps toolchain that is configured Jenkins for OTC. \n\nTo get started, click **Create**."
 version: 0.1
 
 required: 
@@ -33,11 +33,6 @@ jenkins-otc-build:
      execute: true
     services: ["jenkins-otc-repo"]
   hidden: [form, description]
-    
-
-#Web IDE
-webide:
-  service_id: orion
   
 #Deployment
 deploy:
