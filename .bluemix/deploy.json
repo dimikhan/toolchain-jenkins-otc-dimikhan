@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "title": "Hello World Deploy Stage",
-    "description": "hello-world simple toolchain",
-    "longDescription": "The Delivery Pipeline for Devops Services allows you to automate your continuous deployment setup hello-world.",
+    "title": "Deploy Stage",
+    "description": "Jenkins for OTC pipeline",
+    "longDescription": "The Delivery Pipeline for Devops Services to install Jenkins for OTC.",
     "type": "object",
     "properties": {
         "prod-region": {
@@ -17,12 +17,12 @@
             "description": "The bluemix space",
             "type": "string"
         },
-       "hello-world-name": {
-            "description": "hello world app name",
+       "jenkins-otc-name": {
+            "description": "The app name",
             "type": "string"
         }
     },
-    "required": ["prod-region", "prod-organization", "prod-space", "hello-world-name"],
+    "required": ["prod-region", "prod-organization", "prod-space", "jenkins-otc-name"],
     "form": [
        {
           "type": "validator",
@@ -31,8 +31,8 @@
         {
           "type": "text",
           "readonly": false,
-          "title": "Hello World App Name",
-          "key": "hello-world-name"
+          "title": "App Name",
+          "key": "jenkins-otc-name"
         },
         {
             "type": "table",
