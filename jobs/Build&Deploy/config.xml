@@ -17,7 +17,7 @@
       <command>#!/bin/bash
 
 CF_REGION_URL=&quot;https://api.stage1.ng.bluemix.net&quot;
-JENKINS_FINISHED_HOOK_URL=&quot;https://devops-api.stage1.ng.bluemix.net/v1/pipeline/pipelines/<:pid>/stages/<:sid>/executions&quot;
+JENKINS_FINISHED_HOOK_URL=&quot;https://devops-api.stage1.ng.bluemix.net/v1/pipeline/pipelines/{pid}/stages/{sid}/executions&quot;
 CF_ORG_NAME=&quot;...&quot;
 CF_SPACE_NAME=&quot;...&quot;
 
