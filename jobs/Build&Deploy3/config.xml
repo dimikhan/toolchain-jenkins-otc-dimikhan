@@ -9,6 +9,7 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <authToken>jenkins_sample_app</authToken>
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
@@ -31,7 +32,7 @@ cf target -o $CF_ORG_NAME -s $CF_SPACE_NAME
 
 CF_ACCESS_TOKEN=`cf oauth-token`
 
-cat &gt; get_repo.py &lt;&lt;EOF
+cat &gt; get_details.py &lt;&lt;EOF
 import os, sys, json
 
 uptType=sys.argv[1]
@@ -46,7 +47,7 @@ def printRepositoryDetails(servicesJson):
             print &quot;repo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;]
             sys.stderr.write(&quot;\nrepo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;])
             print &quot;token_url: &quot; + service[&quot;parameters&quot;][&quot;token_url&quot;]
-            sys.stderr.write(&quot;\nrepo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;])
+            sys.stderr.write(&quot;\nrtoken_url: &quot; + service[&quot;parameters&quot;][&quot;token_url&quot;])
 
 for toolchainId in toolchainIds.splitlines():
     sys.stderr.write(&quot;\nChecking toolchain &quot; + toolchainId)
@@ -61,14 +62,13 @@ for toolchainId in toolchainIds.splitlines():
             print &quot;cf_space: &quot; + targetSplit[3]
             printRepositoryDetails(servicesJson)
             quit()
-
 EOF
 
-python get_repo.py $UPT_TYPE $UPT_NAME &gt; repo.txt
+DETAILS_FILE=toolchain_details.txt
+python get_details.py $UPT_TYPE $UPT_NAME &gt; $DETAILS_FILE
 
-
-GIT_REPO_URL=`grep repo_url repo.txt | awk &apos;{print \$2}&apos;`
-GIT_TOKEN_URL=`grep token_url repo.txt | awk &apos;{print \$2}&apos;`
+GIT_REPO_URL=`grep repo_url $DETAILS_FILE | awk &apos;{print \$2}&apos;`
+GIT_TOKEN_URL=`grep token_url $DETAILS_FILE | awk &apos;{print \$2}&apos;`
 
 cat &gt; get_git_auth_token.py &lt;&lt;EOF
 import os, sys, json
@@ -86,9 +86,9 @@ GIT_FOLDER_NAME=`echo $GIT_REPO_URL | awk -F &quot;/&quot; &apos;{print $(NF)}&a
 GIT_APP_NAME=$GIT_FOLDER_NAME&apos;_12345&apos;
 cd $GIT_FOLDER_NAME
 
-# CF_REGION=`grep cf_region repo.txt | awk &apos;{print \$2}&apos;`
-CF_ORG_NAME=`grep cf_org repo.txt | awk &apos;{print \$2}&apos;`
-CF_SPACE_NAME=`grep cf_space repo.txt | awk &apos;{print \$2}&apos;`
+# CF_REGION=`grep cf_region $DETAILS_FILE | awk &apos;{print \$2}&apos;`
+CF_ORG_NAME=`grep cf_org $DETAILS_FILE | awk &apos;{print \$2}&apos;`
+CF_SPACE_NAME=`grep cf_space $DETAILS_FILE | awk &apos;{print \$2}&apos;`
 cf target -o $CF_ORG_NAME -s $CF_SPACE_NAME
 cf push $GIT_APP_NAME
 cf app $GIT_APP_NAME
