@@ -17,7 +17,7 @@
       <command>#!/bin/bash
 
 CF_REGION_URL=&quot;https://api.stage1.ng.bluemix.net&quot;
-JENKINS_FINISHED_HOOK_URL=https://devops-api.stage1.ng.bluemix.net/v1/pipeline/pipelines/<:pid>/stages/<:sid>/executions
+JENKINS_FINISHED_HOOK_URL=&quot;https://devops-api.stage1.ng.bluemix.net/v1/pipeline/pipelines/<:pid>/stages/<:sid>/executions&quot;
 CF_ORG_NAME=&quot;...&quot;
 CF_SPACE_NAME=&quot;...&quot;
 
@@ -87,7 +87,7 @@ cf push $GIT_APP_NAME
 cf app $GIT_APP_NAME
 
 # notify Jenkins Finished Hook
-# curl -X POST -H "Authorization: $CF_ACCESS_TOKEN" $JENKINS_FINISHED_HOOK_URL
+curl -i -X POST -H "Accept: application/json" -H "Authorization: $CF_ACCESS_TOKEN" --data '[]' $JENKINS_FINISHED_HOOK_URL
 
 # clean cf credentials
 cd /home/jenkins/.cf
