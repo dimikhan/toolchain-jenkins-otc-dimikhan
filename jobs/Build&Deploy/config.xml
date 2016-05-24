@@ -9,7 +9,6 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <authToken>jenkins_sample_app</authToken>
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
@@ -21,6 +20,7 @@ JENKINS_FINISHED_HOOK_URL=&quot;https://devops-api.stage1.ng.bluemix.net/v1/pipe
 CF_ORG_NAME=&quot;...&quot;
 CF_SPACE_NAME=&quot;...&quot;
 
+TOOLCHAIN_ID=&quot;&quot;
 UPT_TYPE=jenkins
 UPT_NAME=jenkins_sample_app
 
@@ -33,22 +33,24 @@ cf target -o $CF_ORG_NAME -s $CF_SPACE_NAME
 
 CF_ACCESS_TOKEN=`cf oauth-token`
 
-cat &gt; get_repo.py &lt;&lt;EOF
+cat &gt; get_details.py &lt;&lt;EOF
 import os, sys, json
 
 uptType=sys.argv[1]
 uptName=sys.argv[2]
+toolchainId=sys.argv[3]
 
-toolchainIds = os.popen(&quot;cf otc toolchains | tail -n +4 | awk &apos;{print \$2}&apos;&quot;).read()
+if toolchainId:
+	toolchainIds=toolchainId
+else:
+	toolchainIds=os.popen(&quot;cf otc toolchains | tail -n +4 | awk &apos;{print \$NF}&apos;&quot;).read()
 
 def printRepositoryDetails(servicesJson):
     for service in servicesJson:
         if (service[&quot;service_id&quot;] == &quot;githubpublic&quot;
                 or service[&quot;service_id&quot;] == &quot;github&quot;):
             print &quot;repo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;]
-            sys.stderr.write(&quot;\nrepo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;])
             print &quot;token_url: &quot; + service[&quot;parameters&quot;][&quot;token_url&quot;]
-            sys.stderr.write(&quot;\nrepo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;])
 
 for toolchainId in toolchainIds.splitlines():
     sys.stderr.write(&quot;\nChecking toolchain &quot; + toolchainId)
@@ -56,17 +58,30 @@ for toolchainId in toolchainIds.splitlines():
     for service in servicesJson:
         if (service[&quot;service_id&quot;] == &quot;userprovided&quot;
                 and service[&quot;parameters&quot;][&quot;type&quot;] == uptType
-                and service[&quot;parameters&quot;][&quot;name&quot;] == uptName):
+                and service[&quot;parameters&quot;][&quot;name&quot;].startswith(uptName)):
+            if &quot;;&quot; in service[&quot;parameters&quot;][&quot;name&quot;]:
+                targetSplit=service[&quot;parameters&quot;][&quot;name&quot;].split(&quot;;&quot;)
+                print &quot;cf_region: &quot; + targetSplit[1]
+                print &quot;cf_org: &quot; + targetSplit[2]
+                print &quot;cf_space: &quot; + targetSplit[3]
             printRepositoryDetails(servicesJson)
             quit()
-
 EOF
 
-python get_repo.py $UPT_TYPE $UPT_NAME &gt; repo.txt
+DETAILS_FILE=toolchain_details.txt
+python get_details.py $UPT_TYPE $UPT_NAME &quot;$TOOLCHAIN_ID&quot; &gt; $DETAILS_FILE
 
+GIT_REPO_URL=`grep repo_url $DETAILS_FILE | awk &apos;{print \$2}&apos;`
+GIT_TOKEN_URL=`grep token_url $DETAILS_FILE | awk &apos;{print \$2}&apos;`
+if [ -z &quot;$GIT_REPO_URL&quot; ];
+then
+   echo A toolchain with specified UPS not found
+   exit 1
+fi
 
-GIT_REPO_URL=`grep repo_url repo.txt | awk &apos;{print \$2}&apos;`
-GIT_TOKEN_URL=`grep token_url repo.txt | awk &apos;{print \$2}&apos;`
+printf &quot;\n\nToolchain details:\n&quot;
+cat $DETAILS_FILE
+printf &quot;\n\n&quot;
 
 cat &gt; get_git_auth_token.py &lt;&lt;EOF
 import os, sys, json
@@ -82,17 +97,25 @@ git clone `echo $GIT_REPO_URL | sed &apos;s_&apos;&quot;https://&quot;&apos;_&ap
 
 GIT_FOLDER_NAME=`echo $GIT_REPO_URL | awk -F &quot;/&quot; &apos;{print $(NF)}&apos; | sed s/.git//`
 GIT_APP_NAME=$GIT_FOLDER_NAME&apos;_12345&apos;
+
+# CF_REGION=`grep cf_region $DETAILS_FILE | awk &apos;{print \$2}&apos;`
+CF_APP_ORG=`grep cf_org $DETAILS_FILE | awk &apos;{print \$2}&apos;`
+CF_APP_SPACE=`grep cf_space $DETAILS_FILE | awk &apos;{print \$2}&apos;`
+if [ ! -z &quot;$CF_APP_ORG&quot; ];
+then
+    cf target -o $CF_APP_ORG -s $CF_APP_SPACE
+fi
 cd $GIT_FOLDER_NAME
 cf push $GIT_APP_NAME
 cf app $GIT_APP_NAME
 
 # notify Jenkins Finished Hook
-curl -i -X POST -H "Accept: application/json" -H "Authorization: $CF_ACCESS_TOKEN" --data '[]' $JENKINS_FINISHED_HOOK_URL
+curl -i -X POST -H &quot;Accept: application/json&quot; -H &quot;Authorization: $CF_ACCESS_TOKEN&quot; --data &apos;[]&apos; $JENKINS_FINISHED_HOOK_URL
 
 # clean cf credentials
 cd /home/jenkins/.cf
 rm -f config.json
-      </command>
+</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
