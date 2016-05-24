@@ -84,12 +84,12 @@ git clone `echo $GIT_REPO_URL | sed &apos;s_&apos;&quot;https://&quot;&apos;_&ap
 
 GIT_FOLDER_NAME=`echo $GIT_REPO_URL | awk -F &quot;/&quot; &apos;{print $(NF)}&apos; | sed s/.git//`
 GIT_APP_NAME=$GIT_FOLDER_NAME&apos;_12345&apos;
-cd $GIT_FOLDER_NAME
 
 # CF_REGION=`grep cf_region $DETAILS_FILE | awk &apos;{print \$2}&apos;`
 CF_ORG_NAME=`grep cf_org $DETAILS_FILE | awk &apos;{print \$2}&apos;`
 CF_SPACE_NAME=`grep cf_space $DETAILS_FILE | awk &apos;{print \$2}&apos;`
 cf target -o $CF_ORG_NAME -s $CF_SPACE_NAME
+cd $GIT_FOLDER_NAME
 cf push $GIT_APP_NAME
 cf app $GIT_APP_NAME
 
