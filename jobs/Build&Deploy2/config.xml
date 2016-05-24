@@ -25,8 +25,8 @@ UPT_NAME=jenkins_sample_app
 whoami
 rm -rf *
 
-cf auth $CF_USER $CF_PASS
 cf api $CF_REGION_URL
+cf auth $CF_USER $CF_PASS
 cf target -o $CF_ORG_NAME -s $CF_SPACE_NAME
 
 CF_ACCESS_TOKEN=`cf oauth-token`
