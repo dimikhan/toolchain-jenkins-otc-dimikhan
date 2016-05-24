@@ -15,81 +15,81 @@
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 
-      CF_ACCESS_TOKEN=&quot;bearer ...&quot;
-      CF_REFRESH_TOKEN=&quot;...&quot;
-      CF_ORG_NAME=&quot;...&quot;
-      CF_SPACE_NAME=&quot;...&quot;
+CF_ACCESS_TOKEN=&quot;bearer ...&quot;
+CF_REFRESH_TOKEN=&quot;...&quot;
+CF_ORG_NAME=&quot;...&quot;
+CF_SPACE_NAME=&quot;...&quot;
 
-      UPT_TYPE=jenkins
-      UPT_NAME=jenkins_sample_app
+UPT_TYPE=jenkins
+UPT_NAME=jenkins_sample_app
 
-      whoami
-      rm -rf *
+whoami
+rm -rf *
 
-      GIT_CONFIG=&apos;{&quot;ConfigVersion&quot;: 3,&quot;Target&quot;:&quot;https://api.stage1.ng.bluemix.net&quot;,&quot;APIVersion&quot;:&quot;2.44.0&quot;,&quot;AuthorizationEndpoint&quot;:&quot;https://login.stage1.ng.bluemix.net/UAALoginServerWAR&quot;,&quot;LoggregatorEndPoint&quot;:&quot;wss://loggregator.stage1.ng.bluemix.net:443&quot;,&quot;DopplerEndPoint&quot;:&quot;wss://doppler.stage1.ng.bluemix.net:443&quot;,&quot;UaaEndpoint&quot;:&quot;https://uaa.stage1.ng.bluemix.net&quot;,&quot;RoutingAPIEndpoint&quot;:&quot;https://api.stage1.ng.bluemix.net/routing&quot;,&quot;AccessToken&quot;:&quot;&apos;$CF_ACCESS_TOKEN&apos;&quot;,&quot;SSHOAuthClient&quot;:&quot;ssh-proxy&quot;,&quot;RefreshToken&quot;:&quot;&apos;$CF_REFRESH_TOKEN&apos;&quot;}&apos;
+GIT_CONFIG=&apos;{&quot;ConfigVersion&quot;: 3,&quot;Target&quot;:&quot;https://api.stage1.ng.bluemix.net&quot;,&quot;APIVersion&quot;:&quot;2.44.0&quot;,&quot;AuthorizationEndpoint&quot;:&quot;https://login.stage1.ng.bluemix.net/UAALoginServerWAR&quot;,&quot;LoggregatorEndPoint&quot;:&quot;wss://loggregator.stage1.ng.bluemix.net:443&quot;,&quot;DopplerEndPoint&quot;:&quot;wss://doppler.stage1.ng.bluemix.net:443&quot;,&quot;UaaEndpoint&quot;:&quot;https://uaa.stage1.ng.bluemix.net&quot;,&quot;RoutingAPIEndpoint&quot;:&quot;https://api.stage1.ng.bluemix.net/routing&quot;,&quot;AccessToken&quot;:&quot;&apos;$CF_ACCESS_TOKEN&apos;&quot;,&quot;SSHOAuthClient&quot;:&quot;ssh-proxy&quot;,&quot;RefreshToken&quot;:&quot;&apos;$CF_REFRESH_TOKEN&apos;&quot;}&apos;
 
-      cd /home/jenkins/.cf
-      rm -f config.json
+cd /home/jenkins/.cf
+rm -f config.json
 
-      echo $GIT_CONFIG &gt; /home/jenkins/.cf/config.json
-      cf target -o $CF_ORG_NAME -s $CF_SPACE_NAME
+echo $GIT_CONFIG &gt; /home/jenkins/.cf/config.json
+cf target -o $CF_ORG_NAME -s $CF_SPACE_NAME
 
-      cat &gt; get_repo.py &lt;&lt;EOF
-      import os, sys, json
+cat &gt; get_repo.py &lt;&lt;EOF
+import os, sys, json
 
-      uptType=sys.argv[1]
-      uptName=sys.argv[2]
+uptType=sys.argv[1]
+uptName=sys.argv[2]
 
-      toolchainIds = os.popen(&quot;cf otc toolchains | tail -n +4 | awk &apos;{print \$2}&apos;&quot;).read()
+toolchainIds = os.popen(&quot;cf otc toolchains | tail -n +4 | awk &apos;{print \$2}&apos;&quot;).read()
 
-      def printRepositoryDetails(servicesJson):
-          for service in servicesJson:
-              if (service[&quot;service_id&quot;] == &quot;githubpublic&quot;
-                      or service[&quot;service_id&quot;] == &quot;github&quot;):
-                  print &quot;repo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;]
-                  sys.stderr.write(&quot;\nrepo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;])
-                  print &quot;token_url: &quot; + service[&quot;parameters&quot;][&quot;token_url&quot;]
-                  sys.stderr.write(&quot;\nrepo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;])
+def printRepositoryDetails(servicesJson):
+    for service in servicesJson:
+        if (service[&quot;service_id&quot;] == &quot;githubpublic&quot;
+                or service[&quot;service_id&quot;] == &quot;github&quot;):
+            print &quot;repo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;]
+            sys.stderr.write(&quot;\nrepo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;])
+            print &quot;token_url: &quot; + service[&quot;parameters&quot;][&quot;token_url&quot;]
+            sys.stderr.write(&quot;\nrepo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;])
 
-      for toolchainId in toolchainIds.splitlines():
-          sys.stderr.write(&quot;\nChecking toolchain &quot; + toolchainId)
-          servicesJson = json.loads(os.popen(&apos;cf otc toolchain &apos; + toolchainId + &apos; services --json | tail -n +2&apos;).read())
-          for service in servicesJson:
-              if (service[&quot;service_id&quot;] == &quot;userprovided&quot;
-                      and service[&quot;parameters&quot;][&quot;type&quot;] == uptType
-                      and service[&quot;parameters&quot;][&quot;name&quot;] == uptName):
-                  printRepositoryDetails(servicesJson)
-                  quit()
+for toolchainId in toolchainIds.splitlines():
+    sys.stderr.write(&quot;\nChecking toolchain &quot; + toolchainId)
+    servicesJson = json.loads(os.popen(&apos;cf otc toolchain &apos; + toolchainId + &apos; services --json | tail -n +2&apos;).read())
+    for service in servicesJson:
+        if (service[&quot;service_id&quot;] == &quot;userprovided&quot;
+                and service[&quot;parameters&quot;][&quot;type&quot;] == uptType
+                and service[&quot;parameters&quot;][&quot;name&quot;] == uptName):
+            printRepositoryDetails(servicesJson)
+            quit()
 
-      EOF
+EOF
 
-      python get_repo.py $UPT_TYPE $UPT_NAME &gt; repo.txt
+python get_repo.py $UPT_TYPE $UPT_NAME &gt; repo.txt
 
 
-      GIT_REPO_URL=`grep repo_url repo.txt | awk &apos;{print \$2}&apos;`
-      GIT_TOKEN_URL=`grep token_url repo.txt | awk &apos;{print \$2}&apos;`
+GIT_REPO_URL=`grep repo_url repo.txt | awk &apos;{print \$2}&apos;`
+GIT_TOKEN_URL=`grep token_url repo.txt | awk &apos;{print \$2}&apos;`
 
-      cat &gt; get_git_auth_token.py &lt;&lt;EOF
-      import os, sys, json
+cat &gt; get_git_auth_token.py &lt;&lt;EOF
+import os, sys, json
 
-      gitTokenUrl=sys.argv[1]
-      cfAuthToken=sys.argv[2]
-      print(json.loads(os.popen(&apos;curl -s &apos; + gitTokenUrl + &apos; -H &quot;Authorization: &apos; + cfAuthToken + &apos;&quot;&apos;).read())[&quot;access_token&quot;])
-      EOF
+gitTokenUrl=sys.argv[1]
+cfAuthToken=sys.argv[2]
+print(json.loads(os.popen(&apos;curl -s &apos; + gitTokenUrl + &apos; -H &quot;Authorization: &apos; + cfAuthToken + &apos;&quot;&apos;).read())[&quot;access_token&quot;])
+EOF
 
-      GIT_AUTH_TOKEN=`python get_git_auth_token.py &quot;$GIT_TOKEN_URL&quot; &quot;$CF_ACCESS_TOKEN&quot;`
+GIT_AUTH_TOKEN=`python get_git_auth_token.py &quot;$GIT_TOKEN_URL&quot; &quot;$CF_ACCESS_TOKEN&quot;`
 
-      git clone `echo $GIT_REPO_URL | sed &apos;s_&apos;&quot;https://&quot;&apos;_&apos;&quot;https://$GIT_AUTH_TOKEN@&quot;&apos;_&apos;`
+git clone `echo $GIT_REPO_URL | sed &apos;s_&apos;&quot;https://&quot;&apos;_&apos;&quot;https://$GIT_AUTH_TOKEN@&quot;&apos;_&apos;`
 
-      GIT_FOLDER_NAME=`echo $GIT_REPO_URL | awk -F &quot;/&quot; &apos;{print $(NF)}&apos; | sed s/.git//`
-      GIT_APP_NAME=$GIT_FOLDER_NAME&apos;_12345&apos;
-      cd $GIT_FOLDER_NAME
-      cf push $GIT_APP_NAME
-      cf app $GIT_APP_NAME
+GIT_FOLDER_NAME=`echo $GIT_REPO_URL | awk -F &quot;/&quot; &apos;{print $(NF)}&apos; | sed s/.git//`
+GIT_APP_NAME=$GIT_FOLDER_NAME&apos;_12345&apos;
+cd $GIT_FOLDER_NAME
+cf push $GIT_APP_NAME
+cf app $GIT_APP_NAME
 
-      # clean cf credentials
-      cd /home/jenkins/.cf
-      rm -f config.json
+# clean cf credentials
+cd /home/jenkins/.cf
+rm -f config.json
       </command>
     </hudson.tasks.Shell>
   </builders>
