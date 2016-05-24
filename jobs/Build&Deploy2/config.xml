@@ -15,7 +15,7 @@
     <hudson.tasks.Shell>
       <command>#!/bin/bash
       
-      CF_REGION_URL="https://api.stage1.ng.bluemix.net"
+      CF_REGION_URL=&quot;https://api.stage1.ng.bluemix.net&quot;
       CF_ORG_NAME=&quot;...&quot;
       CF_SPACE_NAME=&quot;...&quot;
 
@@ -91,5 +91,15 @@
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
-  <buildWrappers/>
+  <buildWrappers>
+    <org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper plugin="credentials-binding@1.7">
+      <bindings>
+        <org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding>
+          <credentialsId>cf_credentials</credentialsId>
+          <usernameVariable>CF_USER</usernameVariable>
+          <passwordVariable>CF_PASS</passwordVariable>
+        </org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding>
+      </bindings>
+    </org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper>
+  </buildWrappers>
 </project>
