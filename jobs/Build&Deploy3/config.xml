@@ -17,11 +17,11 @@
       <command>#!/bin/bash
 
 CF_REGION_URL=&quot;https://api.stage1.ng.bluemix.net&quot;
-CF_ORG_NAME=&quot;wsudol_org&quot;
-CF_SPACE_NAME=&quot;dev_space&quot;
+CF_ORG_NAME=&quot;...&quot;
+CF_SPACE_NAME=&quot;...&quot;
 
 UPT_TYPE=jenkins
-UPT_NAME=jenkins_app
+UPT_NAME=jenkins_sample_app
 
 whoami
 rm -rf *
@@ -38,7 +38,7 @@ import os, sys, json
 uptType=sys.argv[1]
 uptName=sys.argv[2]
 
-toolchainIds = os.popen(&quot;cf otc toolchains | tail -n +4 | awk &apos;{print \$2}&apos;&quot;).read()
+toolchainIds = os.popen(&quot;cf otc toolchains | tail -n +4 | awk &apos;{print \$NF}&apos;&quot;).read()
 
 def printRepositoryDetails(servicesJson):
     for service in servicesJson:
