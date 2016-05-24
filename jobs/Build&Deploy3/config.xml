@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+CF_REGION_URL=&quot;https://api.stage1.ng.bluemix.net&quot;
+CF_ORG_NAME=&quot;...&quot;
+CF_SPACE_NAME=&quot;...&quot;
+
+UPT_TYPE=jenkins
+UPT_NAME=jenkins_sample_app
+
+whoami
+rm -rf *
+
+cf api $CF_REGION_URL
+cf auth $CF_USER $CF_PASS
+cf target -o $CF_ORG_NAME -s $CF_SPACE_NAME
+
+CF_ACCESS_TOKEN=`cf oauth-token`
+
+cat &gt; get_repo.py &lt;&lt;EOF
+import os, sys, json
+
+uptType=sys.argv[1]
+uptName=sys.argv[2]
+
+toolchainIds = os.popen(&quot;cf otc toolchains | tail -n +4 | awk &apos;{print \$2}&apos;&quot;).read()
+
+def printRepositoryDetails(servicesJson):
+    for service in servicesJson:
+        if (service[&quot;service_id&quot;] == &quot;githubpublic&quot;
+                or service[&quot;service_id&quot;] == &quot;github&quot;):
+            print &quot;repo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;]
+            sys.stderr.write(&quot;\nrepo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;])
+            print &quot;token_url: &quot; + service[&quot;parameters&quot;][&quot;token_url&quot;]
+            sys.stderr.write(&quot;\nrepo_url: &quot; + service[&quot;parameters&quot;][&quot;repo_url&quot;])
+
+for toolchainId in toolchainIds.splitlines():
+    sys.stderr.write(&quot;\nChecking toolchain &quot; + toolchainId)
+    servicesJson = json.loads(os.popen(&apos;cf otc toolchain &apos; + toolchainId + &apos; services --json | tail -n +2&apos;).read())
+    for service in servicesJson:
+        if (service[&quot;service_id&quot;] == &quot;userprovided&quot;
+                and service[&quot;parameters&quot;][&quot;type&quot;] == uptType
+                and service[&quot;parameters&quot;][&quot;name&quot;].startswith(uptName)):
+            targetSplit=service[&quot;parameters&quot;][&quot;name&quot;].split(&quot;;&quot;)
+            print &quot;cf_region: &quot; + targetSplit[1]
+            print &quot;cf_org: &quot; + targetSplit[2]
+            print &quot;cf_space: &quot; + targetSplit[3]
+            printRepositoryDetails(servicesJson)
+            quit()
+
+EOF
+
+python get_repo.py $UPT_TYPE $UPT_NAME &gt; repo.txt
+
+
+GIT_REPO_URL=`grep repo_url repo.txt | awk &apos;{print \$2}&apos;`
+GIT_TOKEN_URL=`grep token_url repo.txt | awk &apos;{print \$2}&apos;`
+
+cat &gt; get_git_auth_token.py &lt;&lt;EOF
+import os, sys, json
+
+gitTokenUrl=sys.argv[1]
+cfAuthToken=sys.argv[2]
+print(json.loads(os.popen(&apos;curl -s &apos; + gitTokenUrl + &apos; -H &quot;Authorization: &apos; + cfAuthToken + &apos;&quot;&apos;).read())[&quot;access_token&quot;])
+EOF
+
+GIT_AUTH_TOKEN=`python get_git_auth_token.py &quot;$GIT_TOKEN_URL&quot; &quot;$CF_ACCESS_TOKEN&quot;`
+
+git clone `echo $GIT_REPO_URL | sed &apos;s_&apos;&quot;https://&quot;&apos;_&apos;&quot;https://$GIT_AUTH_TOKEN@&quot;&apos;_&apos;`
+
+GIT_FOLDER_NAME=`echo $GIT_REPO_URL | awk -F &quot;/&quot; &apos;{print $(NF)}&apos; | sed s/.git//`
+GIT_APP_NAME=$GIT_FOLDER_NAME&apos;_12345&apos;
+cd $GIT_FOLDER_NAME
+
+# CF_REGION=`grep cf_region repo.txt | awk &apos;{print \$2}&apos;`
+CF_ORG_NAME=`grep cf_org repo.txt | awk &apos;{print \$2}&apos;`
+CF_SPACE_NAME=`grep cf_space repo.txt | awk &apos;{print \$2}&apos;`
+cf target -o $CF_ORG_NAME -s $CF_SPACE_NAME
+cf push $GIT_APP_NAME
+cf app $GIT_APP_NAME
+
+# clean cf credentials
+cd /home/jenkins/.cf
+rm -f config.json
+      </command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper plugin="credentials-binding@1.7">
+      <bindings>
+        <org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding>
+          <credentialsId>cf_credentials</credentialsId>
+          <usernameVariable>CF_USER</usernameVariable>
+          <passwordVariable>CF_PASS</passwordVariable>
+        </org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding>
+      </bindings>
+    </org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper>
+  </buildWrappers>
+</project>
