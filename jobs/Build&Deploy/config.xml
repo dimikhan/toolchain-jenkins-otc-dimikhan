@@ -9,14 +9,15 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <authToken>jenkins_sample_app</authToken>
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 
-CF_ACCESS_TOKEN=&quot;bearer ...&quot;
-CF_REFRESH_TOKEN=&quot;...&quot;
+CF_REGION_URL=&quot;https://api.stage1.ng.bluemix.net&quot;
+JENKINS_FINISHED_HOOK_URL=&quot;https://devops-api.stage1.ng.bluemix.net/v1/pipeline/pipelines/<:pid>/stages/<:sid>/executions&quot;
 CF_ORG_NAME=&quot;...&quot;
 CF_SPACE_NAME=&quot;...&quot;
 
@@ -26,13 +27,11 @@ UPT_NAME=jenkins_sample_app
 whoami
 rm -rf *
 
-GIT_CONFIG=&apos;{&quot;ConfigVersion&quot;: 3,&quot;Target&quot;:&quot;https://api.stage1.ng.bluemix.net&quot;,&quot;APIVersion&quot;:&quot;2.44.0&quot;,&quot;AuthorizationEndpoint&quot;:&quot;https://login.stage1.ng.bluemix.net/UAALoginServerWAR&quot;,&quot;LoggregatorEndPoint&quot;:&quot;wss://loggregator.stage1.ng.bluemix.net:443&quot;,&quot;DopplerEndPoint&quot;:&quot;wss://doppler.stage1.ng.bluemix.net:443&quot;,&quot;UaaEndpoint&quot;:&quot;https://uaa.stage1.ng.bluemix.net&quot;,&quot;RoutingAPIEndpoint&quot;:&quot;https://api.stage1.ng.bluemix.net/routing&quot;,&quot;AccessToken&quot;:&quot;&apos;$CF_ACCESS_TOKEN&apos;&quot;,&quot;SSHOAuthClient&quot;:&quot;ssh-proxy&quot;,&quot;RefreshToken&quot;:&quot;&apos;$CF_REFRESH_TOKEN&apos;&quot;}&apos;
-
-cd /home/jenkins/.cf
-rm -f config.json
-
-echo $GIT_CONFIG &gt; /home/jenkins/.cf/config.json
+cf api $CF_REGION_URL
+cf auth $CF_USER $CF_PASS
 cf target -o $CF_ORG_NAME -s $CF_SPACE_NAME
+
+CF_ACCESS_TOKEN=`cf oauth-token`
 
 cat &gt; get_repo.py &lt;&lt;EOF
 import os, sys, json
@@ -87,6 +86,9 @@ cd $GIT_FOLDER_NAME
 cf push $GIT_APP_NAME
 cf app $GIT_APP_NAME
 
+# notify Jenkins Finished Hook
+curl -i -X POST -H "Accept: application/json" -H "Authorization: $CF_ACCESS_TOKEN" --data '[]' $JENKINS_FINISHED_HOOK_URL
+
 # clean cf credentials
 cd /home/jenkins/.cf
 rm -f config.json
@@ -94,5 +96,15 @@ rm -f config.json
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
-  <buildWrappers/>
+  <buildWrappers>
+    <org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper plugin="credentials-binding@1.7">
+      <bindings>
+        <org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding>
+          <credentialsId>cf_credentials</credentialsId>
+          <usernameVariable>CF_USER</usernameVariable>
+          <passwordVariable>CF_PASS</passwordVariable>
+        </org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding>
+      </bindings>
+    </org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper>
+  </buildWrappers>
 </project>
